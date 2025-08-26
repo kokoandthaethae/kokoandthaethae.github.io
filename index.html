@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Love Diary</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./style.css">
+  
+</head>
+<body>
+    <!-- Password Screen -->
+    <div id="password-screen">
+        <div class="password-container">
+            <h1>Our Love Diary</h1>
+            <p>Enter our special password to unlock our memories</p>
+            <input type="password" class="password-input" placeholder="Enter Password">
+            <button class="submit-btn">Unlock Our Love</button>
+            <p class="error-message">Incorrect password. Please try again.</p>
+        </div>
+    </div>
+    
+    <!-- Hearts Animation Container -->
+    <div class="hearts" id="hearts-container"></div>
+    
+    <!-- Home Screen -->
+    <div id="home-screen">
+        <div class="header">
+            <h1>Our Love Diary</h1>
+        </div>
+        
+        <!-- Anniversary Counter -->
+        <section id="anniversary">
+            <h2>We've Been Together For</h2>
+            <div class="counter">
+                <div class="time-unit">
+                    <div class="time-value" id="years">0</div>
+                    <div class="time-label">Years</div>
+                </div>
+                <div class="time-unit">
+                    <div class="time-value" id="months">0</div>
+                    <div class="time-label">Months</div>
+                </div>
+                <div class="time-unit">
+                    <div class="time-value" id="days">0</div>
+                    <div class="time-label">Days</div>
+                </div>
+                <div class="time-unit">
+                    <div class="time-value" id="hours">0</div>
+                    <div class="time-label">Hours</div>
+                </div>
+                <div class="time-unit">
+                    <div class="time-value" id="minutes">0</div>
+                    <div class="time-label">Minutes</div>
+                </div>
+                <div class="time-unit">
+                    <div class="time-value" id="seconds">0</div>
+                    <div class="time-label">Seconds</div>
+                </div>
+            </div>
+            <div class="love-quote" id="love-quote">"Every moment with you is a blessing"</div>
+        </section>
+        
+        <div class="book-container">
+            <div class="memory-page" id="first-memory">
+                <div class="memory-photo">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80" alt="Our Photo">
+                </div>
+                <div class="memory-content">
+                    <h2>Our First Meeting</h2>
+                    <p>The day our eyes met and our hearts connected forever. Click to explore our memories together.</p>
+                </div>
+            </div>
+            
+            <div class="memory-page" id="second-memory">
+                <div class="memory-photo">
+                    <img src="https://images.unsplash.com/photo-1519699047748-de8e457a634e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80" alt="Our Photo">
+                </div>
+                <div class="memory-content">
+                    <h2>Special Moments</h2>
+                    <p>All the beautiful moments we've shared together. Click to relive our journey.</p>
+                </div>
+            </div>
+            
+            <div class="memory-page" id="third-memory">
+                <div class="memory-photo">
+                    <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80" alt="Our Photo">
+                </div>
+                <div class="memory-content">
+                    <h2>Future Dreams</h2>
+                    <p>All the dreams we have for our future together. Click to see what's ahead.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Made with ❤️ for us</p>
+        </div>
+    </div>
+    
+    <!-- Portfolio Section -->
+    <div id="portfolio">
+        <div class="portfolio-header">
+            <h2>Our Memories Together</h2>
+            <p>Every moment with you is a memory I treasure forever</p>
+        </div>
+        
+        <div class="gallery">
+            <div class="gallery-item">
+                <img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80" alt="Memory 1">
+            </div>
+            <div class="gallery-item">
+                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80" alt="Memory 2">
+            </div>
+            <div class="gallery-item">
+                <img src="https://images.unsplash.com/photo-1548449112-96a38a643324?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80" alt="Memory 3">
+            </div>
+            <div class="gallery-item">
+                <img src="https://images.unsplash.com/photo-1567532939604-b6b5b0db1604?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80" alt="Memory 4">
+            </div>
+            <div class="gallery-item">
+                <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80" alt="Memory 5">
+            </div>
+            <div class="gallery-item">
+                <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80" alt="Memory 6">
+            </div>
+        </div>
+        
+        <div class="video-container">
+            <h3>Our Special Video</h3>
+            <div class="video-placeholder">
+                <i class="fas fa-play-circle" style="font-size: 48px; margin-right: 15px;"></i>
+                Click to play our love story video
+            </div>
+        </div>
+        
+        <button class="back-btn">Back to Diary</button>
+        
+        <div class="footer">
+            <p>Our Love Story • Since <span id="anniversary-date">2025-08-24</span></p>
+        </div>
+    </div>
+<script>
+// Password functionality
+const passwordScreen = document.getElementById('password-screen');
+const homeScreen = document.getElementById('home-screen');
+const portfolioSection = document.getElementById('portfolio');
+const passwordInput = document.querySelector('.password-input');
+const submitBtn = document.querySelector('.submit-btn');
+const errorMessage = document.querySelector('.error-message');
+const heartsContainer = document.getElementById('hearts-container');
+const backBtn = document.querySelector('.back-btn');
+
+// Our special password
+const correctPassword = "forever";
+
+submitBtn.addEventListener('click', checkPassword);
+passwordInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        checkPassword();
+    }
+});
+
+function checkPassword() {
+    if (passwordInput.value === correctPassword) {
+        // Create hearts animation
+        heartsContainer.style.display = 'block';
+        createHearts();
+        
+        // Hide password screen and show home screen
+        setTimeout(() => {
+            passwordScreen.style.opacity = '0';
+            setTimeout(() => {
+                passwordScreen.style.display = 'none';
+                homeScreen.style.display = 'flex';
+                startAnniversaryCounter(); // Start the anniversary counter
+            }, 1000);
+        }, 2000);
+    } else {
+        errorMessage.style.display = 'block';
+        passwordInput.style.borderColor = '#ff6b6b';
+        passwordInput.value = '';
+    }
+}
+
+// Create falling hearts
+function createHearts() {
+    const heartIcons = ['❤️', '💖', '💕', '💗', '💓', '💘', '💞'];
+    
+    for (let i = 0; i < 50; i++) {
+        setTimeout(() => {
+            const heart = document.createElement('div');
+            heart.classList.add('heart');
+            heart.innerHTML = heartIcons[Math.floor(Math.random() * heartIcons.length)];
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.animationDuration = (Math.random() * 3 + 3) + 's';
+            heartsContainer.appendChild(heart);
+            
+            // Remove heart after animation completes
+            setTimeout(() => {
+                heart.remove();
+            }, 6000);
+        }, i * 100);
+    }
+}
+
+// Anniversary counter functionality
+function startAnniversaryCounter() {
+    // Set your anniversary date here (YYYY, MM-1, DD)
+    const anniversaryDate = new Date(2025, 7, 24); // August 24, 2025
+    const loveQuotes = [
+        "Every moment with you is a blessing",
+        "I love you more with each passing day",
+        "You are my sunshine on a cloudy day",
+        "My heart is and always will be yours",
+        "Growing old with you is my greatest dream",
+        "You make my heart skip a beat",
+        "I fall in love with you every day"
+    ];
+    
+    function updateCounter() {
+        const now = new Date();
+        const diff = now - anniversaryDate;
+        
+        // Calculate time units
+        const seconds = Math.floor(diff / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+        const months = Math.floor(days / 30.44); // Average month length
+        const years = Math.floor(months / 12);
+        
+        // Update the counter display
+        document.getElementById('years').textContent = years;
+        document.getElementById('months').textContent = months % 12;
+        document.getElementById('days').textContent = Math.floor(days % 30.44);
+        document.getElementById('hours').textContent = hours % 24;
+        document.getElementById('minutes').textContent = minutes % 60;
+        document.getElementById('seconds').textContent = seconds % 60;
+        
+        // Change quote every 10 seconds
+        if (seconds % 10 === 0) {
+            const randomQuote = loveQuotes[Math.floor(Math.random() * loveQuotes.length)];
+            document.getElementById('love-quote').textContent = `"${randomQuote}"`;
+        }
+    }
+    
+    // Update counter immediately and then every second
+    updateCounter();
+    setInterval(updateCounter, 1000);
+}
+
+// Memory page click events
+const memoryPages = document.querySelectorAll('.memory-page');
+memoryPages.forEach(page => {
+    page.addEventListener('click', function() {
+        homeScreen.style.display = 'none';
+        portfolioSection.style.display = 'block';
+    });
+});
+
+// Back button functionality
+backBtn.addEventListener('click', function() {
+    portfolioSection.style.display = 'none';
+    homeScreen.style.display = 'flex';
+});
+
+// Video placeholder click
+const videoPlaceholder = document.querySelector('.video-placeholder');
+videoPlaceholder.addEventListener('click', function() {
+    alert("Love story video would play here! ❤️");
+});
+</script>
+</body>
+</html>
