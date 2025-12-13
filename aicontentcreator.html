@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Content Generator</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Noto Sans Myanmar Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Myanmar:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Noto Sans Myanmar', sans-serif;
+            background-color: #f0f4f8; /* Light blue-ish gray background */
+        }
+        /* Custom scrollbar for better look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- Icons ---
+        const Icons = {
+            Copy: () => <i className="fa-regular fa-copy"></i>,
+            Edit: () => <i className="fa-regular fa-pen-to-square"></i>,
+            Trash: () => <i className="fa-solid fa-trash-can"></i>,
+            Plus: () => <i className="fa-solid fa-plus"></i>,
+            Image: () => <i className="fa-regular fa-image"></i>,
+            Microphone: () => <i className="fa-solid fa-microphone"></i>,
+            Wand: () => <i className="fa-solid fa-wand-magic-sparkles"></i>,
+            Volume: () => <i className="fa-solid fa-volume-high"></i>,
+            Spinner: () => <i className="fa-solid fa-circle-notch fa-spin"></i>,
+            Check: () => <i className="fa-solid fa-check"></i>
+        };
+
+        // --- Main Component ---
+        function App() {
+            // --- State ---
+            const [loading, setLoading] = useState(false);
+            const [audioLoading, setAudioLoading] = useState(false);
+            const [generatedContent, setGeneratedContent] = useState(null);
+            const [audioSrc, setAudioSrc] = useState(null);
+            const [error, setError] = useState(null);
+
+            // Form Data State
+            const [formData, setFormData] = useState({
+                pageName: '',
+                tone: 'Friendly', // Default
+                pitch: 'Realistic',
+                draftIdea: '',
+                links: [''],
+                image: null,
+                wordCount: 'Medium',
+                contentType: 'Sales',
+                targetAudience: 'Youth',
+                emoji: true
+            });
+
+            // --- Options (Burmese Labels) ---
+            const tones = [
+                { value: 'Friendly', label: 'ဖော်ရွေသော (Friendly)' },
+                { value: 'Professional', label: 'ပရော်ဖက်ရှင်နယ် (Professional)' },
+                { value: 'Excited', label: 'စိတ်လှုပ်ရှားဖွယ် (Excited)' },
+                { value: 'Urgent', label: 'အရေးကြီးပုံစံ (Urgent)' }
+            ];
+
+            const pitches = [
+                { value: 'Realistic', label: 'Realistic Tone' },
+                { value: 'High', label: 'High Energy' },
+                { value: 'Soft', label: 'Soft & Calm' }
+            ];
+
+            const wordCounts = [
+                { value: 'Short', label: 'အနည်း (Short)' },
+                { value: 'Medium', label: 'အလယ်အလတ် (Medium)' },
+                { value: 'Long', label: 'အများ (Long)' }
+            ];
+
+            const contentTypes = [
+                { value: 'Sales', label: 'အရောင်း (Sales)' },
+                { value: 'News', label: 'သတင်း (News)' },
+                { value: 'Personal', label: 'ကိုယ်ရေးကိုယ်တာ (Personal)' },
+                { value: 'Ad', label: 'ကြော်ငြာ (Ad)' }
+            ];
+
+            const audiences = [
+                { value: 'Youth', label: 'လူငယ် (Youth)' },
+                { value: 'MomKid', label: 'မိခင်နှင့်ကလေး (Mom & Kid)' },
+                { value: 'Mom', label: 'မိခင် (Mom)' },
+                { value: 'General', label: 'အများပြည်သူ (General)' }
+            ];
+
+            // --- Handlers ---
+            const handleInputChange = (field, value) => {
+                setFormData(prev => ({ ...prev, [field]: value }));
+            };
+
+            const handleLinkChange = (index, value) => {
+                const newLinks = [...formData.links];
+                newLinks[index] = value;
+                setFormData(prev => ({ ...prev, links: newLinks }));
+            };
+
+            const addLink = () => {
+                setFormData(prev => ({ ...prev, links: [...prev.links, ''] }));
+            };
+
+            const removeLink = (index) => {
+                const newLinks = formData.links.filter((_, i) => i !== index);
+                setFormData(prev => ({ ...prev, links: newLinks }));
+            };
+
+            const handleImageUpload = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        setFormData(prev => ({ ...prev, image: { file, base64: reader.result } }));
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+
+            // --- API Logic ---
+            const generateContent = async () => {
+                if (!formData.draftIdea && !formData.image) {
+                    setError("ကျေးဇူးပြု၍ မူကြမ်း သို့မဟုတ် ပုံတစ်ခု ထည့်သွင်းပါ။ (Please provide a draft or image)");
+                    return;
+                }
+                
+                setLoading(true);
+                setError(null);
+                setGeneratedContent(null);
+                setAudioSrc(null);
+
+                const apiKey = "AIzaSyBWQK9mwJTFdoolTfhRLDGCOPwxtuFpbtA"; // Runtime key injection
+
+                try {
+                    // 1. Image Processing (if any)
+                    let imagePart = null;
+                    if (formData.image) {
+                         const base64Data = formData.image.base64.split(',')[1];
+                         imagePart = {
+                             inlineData: {
+                                 mimeType: formData.image.file.type,
+                                 data: base64Data
+                             }
+                         };
+                    }
+
+                    // 2. Construct Prompt
+                    const systemInstruction = `You are a professional Burmese content creator AI. 
+                    Create social media content based on the user's inputs.
+                    The output MUST follow this specific format:
+                    
+                    **Header/Title** (Catchy one-liner)
+                    
+                    **Body** (Engaging content with emojis if requested)
+                    
+                    **Price/Call to Action** (If sales type)
+                    
+                    **Hashtags**
+                    
+                    Language: Burmese (Myanmar).
+                    Tone: ${formData.tone}.
+                    Audience: ${formData.targetAudience}.
+                    Type: ${formData.contentType}.
+                    Length: ${formData.wordCount}.
+                    Use Emojis: ${formData.emoji ? 'Yes, heavily' : 'Minimal'}.
+                    Page Name: ${formData.pageName}.
+                    References/Links: ${formData.links.join(', ')}.
+                    `;
+
+                    const userPrompt = `Draft Idea: ${formData.draftIdea}. ${formData.image ? 'Also describe and sell the product shown in the image.' : ''}`;
+
+                    const parts = [{ text: userPrompt }];
+                    if (imagePart) parts.push(imagePart);
+
+                    // 3. Call Text Generation API
+                    const textResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: parts }],
+                            systemInstruction: { parts: [{ text: systemInstruction }] }
+                        })
+                    });
+
+                    if (!textResponse.ok) throw new Error("Failed to generate content");
+                    const textData = await textResponse.json();
+                    const generatedText = textData.candidates?.[0]?.content?.parts?.[0]?.text || "No content generated.";
+                    
+                    setGeneratedContent(generatedText);
+
+                    // 4. Call TTS API (After text is ready)
+                    generateAudio(generatedText, apiKey);
+
+                } catch (err) {
+                    console.error(err);
+                    setError("An error occurred while generating content. Please try again.");
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const generateAudio = async (text, apiKey) => {
+                setAudioLoading(true);
+                try {
+                    // Clean text for speech (remove excessive emojis/hashtags for better reading)
+                    // Simple cleanup: just send raw text, Gemini TTS is usually smart enough, but let's strip hashtags at end
+                    const textForSpeech = text.replace(/#\S+/g, ''); 
+
+                    const ttsResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: textForSpeech }] }],
+                            generationConfig: {
+                                responseModalities: ["AUDIO"],
+                                speechConfig: {
+                                    voiceConfig: {
+                                        prebuiltVoiceConfig: {
+                                            voiceName: "Leda" // Good generic voice
+                                        }
+                                    }
+                                }
+                            }
+                        })
+                    });
+
+                    if (!ttsResponse.ok) throw new Error("Failed to generate audio");
+                    const ttsData = await ttsResponse.json();
+                    const audioContent = ttsData.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+                    
+                    if (audioContent) {
+                        // Gemini returns PCM, need to rely on browser or wrap in WAV container logic
+                        // For simplicity in this environment, we will assume standard base64 audio handling
+                        // However, Gemini TTS returns raw PCM often, but the model `gemini-2.5-flash-preview-tts` might return WAV or raw.
+                        // The documentation provided says "PCM16 audio data ... Must convert PCM to WAV".
+                        // We will implement a simple WAV header injector.
+                        
+                        const wavUrl = pcmToWav(audioContent);
+                        setAudioSrc(wavUrl);
+                    }
+
+                } catch (err) {
+                    console.error("TTS Error", err);
+                    // Don't block UI if audio fails
+                } finally {
+                    setAudioLoading(false);
+                }
+            };
+
+            // Helper to convert base64 PCM to WAV URL
+            const pcmToWav = (base64PCM) => {
+                const binaryString = window.atob(base64PCM);
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                
+                // Create WAV header
+                const wavHeader = new ArrayBuffer(44);
+                const view = new DataView(wavHeader);
+                
+                const sampleRate = 24000; // Standard for Gemini usually
+                const numChannels = 1;
+                const bitsPerSample = 16;
+                
+                const writeString = (view, offset, string) => {
+                    for (let i = 0; i < string.length; i++) {
+                        view.setUint8(offset + i, string.charCodeAt(i));
+                    }
+                };
+                
+                writeString(view, 0, 'RIFF');
+                view.setUint32(4, 36 + len, true);
+                writeString(view, 8, 'WAVE');
+                writeString(view, 12, 'fmt ');
+                view.setUint32(16, 16, true);
+                view.setUint16(20, 1, true); // PCM
+                view.setUint16(22, numChannels, true);
+                view.setUint32(24, sampleRate, true);
+                view.setUint32(28, sampleRate * numChannels * 2, true);
+                view.setUint16(32, numChannels * 2, true);
+                view.setUint16(34, bitsPerSample, true);
+                writeString(view, 36, 'data');
+                view.setUint32(40, len, true);
+                
+                const blob = new Blob([view, bytes], { type: 'audio/wav' });
+                return URL.createObjectURL(blob);
+            };
+
+            const copyToClipboard = () => {
+                const textarea = document.createElement('textarea');
+                textarea.value = generatedContent;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert("Content copied!");
+            };
+
+            // --- Render ---
+            return (
+                <div className="min-h-screen bg-slate-50 flex flex-col items-center py-8 px-4 font-sans">
+                    
+                    {/* Header */}
+                    <div className="w-full max-w-4xl mb-6 flex items-center gap-3">
+                        <div className="bg-blue-600 text-white p-3 rounded-xl shadow-lg">
+                            <Icons.Wand />
+                        </div>
+                        <h1 className="text-2xl font-bold text-slate-800">AI Content Generator</h1>
+                    </div>
+
+                    <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        
+                        {/* LEFT COLUMN: Inputs */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-5">
+                            
+                            {/* Page Name */}
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-1">စာမျက်နာအမည် (Page Name)</label>
+                                <input 
+                                    type="text" 
+                                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                                    placeholder="e.g. Fashion Shop Myanmar"
+                                    value={formData.pageName}
+                                    onChange={(e) => handleInputChange('pageName', e.target.value)}
+                                />
+                            </div>
+
+                            {/* Tone & Pitch Row */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1">လေယူလေသိမ်း (Tone)</label>
+                                    <div className="relative">
+                                        <select 
+                                            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 outline-none"
+                                            value={formData.tone}
+                                            onChange={(e) => handleInputChange('tone', e.target.value)}
+                                        >
+                                            {tones.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                                        </select>
+                                        <div className="absolute right-3 top-3 text-slate-400 pointer-events-none text-xs">▼</div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1">အသံအနိမ့်အမြင့် (Pitch)</label>
+                                    <div className="relative">
+                                        <select 
+                                            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 outline-none"
+                                            value={formData.pitch}
+                                            onChange={(e) => handleInputChange('pitch', e.target.value)}
+                                        >
+                                            {pitches.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                                        </select>
+                                        <div className="absolute right-3 top-3 text-slate-400 pointer-events-none text-xs">▼</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Draft / Idea */}
+                            <div>
+                                <div className="flex justify-between items-center mb-1">
+                                    <label className="block text-sm font-semibold text-slate-700">မူကြမ်း | အကြံဉာဏ် (Draft)</label>
+                                    <button className="text-blue-500 hover:text-blue-600 text-sm flex items-center gap-1">
+                                        <Icons.Microphone /> <span>Voice Input</span>
+                                    </button>
+                                </div>
+                                <textarea 
+                                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg h-32 focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                                    placeholder="ဥပမာ- ပုံမှာပြထားတဲ့ ဘောင်းဘီနဲ့ အင်္ကျီကို ၅၀၀၀ နဲ့ရောင်းပေးပါ..."
+                                    value={formData.draftIdea}
+                                    onChange={(e) => handleInputChange('draftIdea', e.target.value)}
+                                ></textarea>
+                            </div>
+
+                            {/* Reference Links */}
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-2">ကိုးကားချက် (References)</label>
+                                <div className="space-y-2">
+                                    {formData.links.map((link, index) => (
+                                        <div key={index} className="flex gap-2">
+                                            <input 
+                                                type="text" 
+                                                className="flex-1 p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                                placeholder="https://..."
+                                                value={link}
+                                                onChange={(e) => handleLinkChange(index, e.target.value)}
+                                            />
+                                            {formData.links.length > 1 && (
+                                                <button 
+                                                    onClick={() => removeLink(index)}
+                                                    className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                                                >
+                                                    <Icons.Trash />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                    <button 
+                                        onClick={addLink}
+                                        className="text-sm text-blue-600 font-medium hover:underline flex items-center gap-1 mt-1"
+                                    >
+                                        <Icons.Plus /> <span>Add Link</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Image Upload */}
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-2">ပုံတင်ရန် (Upload Image)</label>
+                                <div className="border-2 border-dashed border-slate-300 rounded-xl p-4 text-center hover:bg-slate-50 transition cursor-pointer relative group">
+                                    <input 
+                                        type="file" 
+                                        accept="image/*"
+                                        onChange={handleImageUpload}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                    />
+                                    {formData.image ? (
+                                        <div className="relative h-32 w-full">
+                                            <img src={formData.image.base64} className="h-full w-full object-contain rounded-lg" />
+                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition rounded-lg">
+                                                Change Image
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="py-4">
+                                            <div className="text-slate-400 text-3xl mb-2"><Icons.Image /></div>
+                                            <p className="text-sm text-slate-500">Click to upload photo</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Settings Grid */}
+                            <div className="grid grid-cols-2 gap-4">
+                                {/* Word Count */}
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-2">စာလုံးရေ (Length)</label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {wordCounts.map(opt => (
+                                            <button 
+                                                key={opt.value}
+                                                onClick={() => handleInputChange('wordCount', opt.value)}
+                                                className={`px-3 py-1.5 text-xs rounded-full border transition ${
+                                                    formData.wordCount === opt.value 
+                                                    ? 'bg-blue-100 border-blue-500 text-blue-700 font-medium' 
+                                                    : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                                                }`}
+                                            >
+                                                {opt.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                
+                                {/* Emoji Toggle */}
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-2">အီမိုဂျီ (Emoji)</label>
+                                    <button 
+                                        onClick={() => handleInputChange('emoji', !formData.emoji)}
+                                        className={`w-12 h-6 rounded-full p-1 transition-colors duration-200 ease-in-out ${formData.emoji ? 'bg-blue-500' : 'bg-slate-300'}`}
+                                    >
+                                        <div className={`bg-white w-4 h-4 rounded-full shadow-sm transform transition-transform duration-200 ${formData.emoji ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Type & Audience */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1">အမျိုးအစား (Type)</label>
+                                    <div className="relative">
+                                        <select 
+                                            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                            value={formData.contentType}
+                                            onChange={(e) => handleInputChange('contentType', e.target.value)}
+                                        >
+                                            {contentTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1">ပရိသတ် (Audience)</label>
+                                    <div className="relative">
+                                        <select 
+                                            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                            value={formData.targetAudience}
+                                            onChange={(e) => handleInputChange('targetAudience', e.target.value)}
+                                        >
+                                            {audiences.map(a => <option key={a.value} value={a.value}>{a.label}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Generate Button */}
+                            <button 
+                                onClick={generateContent}
+                                disabled={loading}
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-md transition transform active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                            >
+                                {loading ? (
+                                    <>
+                                        <Icons.Spinner /> <span>Generating...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Icons.Wand /> <span>Generate Content</span>
+                                    </>
+                                )}
+                            </button>
+
+                            {error && (
+                                <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+                                    {error}
+                                </div>
+                            )}
+
+                        </div>
+
+                        {/* RIGHT COLUMN: Output */}
+                        <div className="flex flex-col space-y-6">
+                            
+                            {/* Output Card */}
+                            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-full overflow-hidden">
+                                <div className="bg-slate-50 p-4 border-b border-slate-100 flex justify-between items-center">
+                                    <h2 className="font-semibold text-slate-700 flex items-center gap-2">
+                                        <span className="text-xl">📝</span> ဖန်တီးထားသော Content
+                                    </h2>
+                                    <div className="flex gap-2">
+                                        <button 
+                                            onClick={copyToClipboard}
+                                            disabled={!generatedContent}
+                                            className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition disabled:opacity-50"
+                                            title="Copy"
+                                        >
+                                            <Icons.Copy />
+                                        </button>
+                                        <button 
+                                            disabled={!generatedContent}
+                                            className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition disabled:opacity-50"
+                                            title="Edit"
+                                        >
+                                            <Icons.Edit />
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div className="p-6 flex-1 overflow-y-auto min-h-[400px]">
+                                    {loading ? (
+                                        <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-4">
+                                            <div className="text-4xl animate-pulse"><Icons.Wand /></div>
+                                            <p className="animate-pulse">AI is writing your content...</p>
+                                        </div>
+                                    ) : generatedContent ? (
+                                        <div className="whitespace-pre-wrap text-slate-800 leading-relaxed font-medium">
+                                            {generatedContent}
+                                        </div>
+                                    ) : (
+                                        <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-2">
+                                            <div className="text-4xl"><Icons.Copy /></div>
+                                            <p>Result will appear here</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Audio Player Card */}
+                            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+                                <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                                    <span className="text-blue-500"><Icons.Volume /></span> Audio Dialogue (AI Voice)
+                                </h3>
+                                
+                                {audioLoading ? (
+                                    <div className="flex items-center gap-3 text-sm text-slate-500">
+                                        <Icons.Spinner /> <span>Generating audio...</span>
+                                    </div>
+                                ) : audioSrc ? (
+                                    <audio controls className="w-full h-10">
+                                        <source src={audioSrc} type="audio/wav" />
+                                        Your browser does not support the audio element.
+                                    </audio>
+                                ) : (
+                                    <div className="text-sm text-slate-400 italic">
+                                        Audio will be generated automatically after text.
+                                    </div>
+                                )}
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
