@@ -1,129 +1,190 @@
-// Password functionality
-const passwordScreen = document.getElementById('password-screen');
-const homeScreen = document.getElementById('home-screen');
-const portfolioSection = document.getElementById('portfolio');
-const passwordInput = document.querySelector('.password-input');
-const submitBtn = document.querySelector('.submit-btn');
-const errorMessage = document.querySelector('.error-message');
-const heartsContainer = document.getElementById('hearts-container');
-const backBtn = document.querySelector('.back-btn');
+        // --- CONFIGURATION (EDIT HERE) ---
+        const CONFIG = {
+            password: "love123",
+            startDate: "2025-08-24", // Your Anniversary Date (YYYY-MM-DD)
+            introTexts: [
+                "Every love story is beautiful, but ours is my favorite 📖",
+                "You are the source of my joy and the center of my world 🌎",
+                "I love you more than yesterday, but less than tomorrow 📈",
+                "You are my sun, my moon, and all my stars ✨",
+                "Being with you is the best feeling in the world ❤️"
+            ],
+            images: [
+                "https://drive.google.com/thumbnail?id=1ZrqSYb-cSUZ8hqQwfKnxQMsHCpXIpnK2&sz=w1000",
+                "https://drive.google.com/thumbnail?id=1uauSzWxg486-l6YSneM_W0ZUpfxYHXo1&sz=w1000",
+                "https://images.unsplash.com/photo-1516961642265-531546e84af2?w=500",
+                "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500",
+                "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=500",
+                "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=500",
+                "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=500"
+            ]
+        };
 
-// Our special password
-const correctPassword = "2482025";
+        // --- 1. LOGIN LOGIC ---
+        function checkPass() {
+            const input = document.getElementById('password');
+            const error = document.getElementById('error');
+            if (input.value === CONFIG.password) {
+                document.getElementById('login-gate').style.opacity = 0;
+                setTimeout(() => {
+                    document.getElementById('login-gate').style.display = 'none';
+                    startIntro();
+                }, 800);
+            } else {
+                error.style.display = 'block';
+                input.style.borderColor = 'red';
+                // Shake animation
+                input.animate([
+                    { transform: 'translateX(0)' },
+                    { transform: 'translateX(-10px)' },
+                    { transform: 'translateX(10px)' },
+                    { transform: 'translateX(0)' }
+                ], { duration: 300 });
+            }
+        }
 
-submitBtn.addEventListener('click', checkPassword);
-passwordInput.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        checkPassword();
-    }
-});
+        // --- 2. INTRO SEQUENCE ---
+        function startIntro() {
+            const overlay = document.getElementById('intro-overlay');
+            const bg = document.getElementById('intro-bg');
+            const textEl = document.getElementById('typing-text');
+            const audio = document.getElementById('bg-music');
 
-function checkPassword() {
-    if (passwordInput.value === correctPassword) {
-        // Create hearts animation
-        heartsContainer.style.display = 'block';
-        createHearts();
-        
-        // Hide password screen and show home screen
-        setTimeout(() => {
-            passwordScreen.style.opacity = '0';
-            setTimeout(() => {
-                passwordScreen.style.display = 'none';
-                homeScreen.style.display = 'flex';
-                startAnniversaryCounter(); // Start the anniversary counter
-            }, 1000);
-        }, 2000);
-    } else {
-        errorMessage.style.display = 'block';
-        passwordInput.style.borderColor = '#ff6b6b';
-        passwordInput.value = '';
-    }
-}
+            overlay.style.display = 'flex';
+            audio.volume = 0.5;
+            audio.play().catch(() => console.log("User must interact first"));
+            document.getElementById('music-btn').classList.add('playing');
 
-// Create falling hearts
-function createHearts() {
-    const heartIcons = ['❤️', '💖', '💕', '💗', '💓', '💘', '💞'];
-    
-    for (let i = 0; i < 50; i++) {
-        setTimeout(() => {
-            const heart = document.createElement('div');
-            heart.classList.add('heart');
-            heart.innerHTML = heartIcons[Math.floor(Math.random() * heartIcons.length)];
-            heart.style.left = Math.random() * 100 + 'vw';
-            heart.style.animationDuration = (Math.random() * 3 + 3) + 's';
-            heartsContainer.appendChild(heart);
+            let step = 0;
             
-            // Remove heart after animation completes
+            function nextSlide() {
+                if (step >= CONFIG.introTexts.length) {
+                    skipIntro();
+                    return;
+                }
+                
+                // Change BG Randomly
+                bg.src = CONFIG.images[step % CONFIG.images.length];
+                
+                // Typewriter Effect
+                textEl.innerHTML = "";
+                let txt = CONFIG.introTexts[step];
+                let i = 0;
+                let typeInterval = setInterval(() => {
+                    if(i < txt.length) {
+                        textEl.innerHTML += txt.charAt(i);
+                        i++;
+                    } else {
+                        clearInterval(typeInterval);
+                        setTimeout(nextSlide, 3000); // Wait 3s before next
+                    }
+                }, 100); // Typing speed
+                
+                step++;
+            }
+            nextSlide();
+        }
+
+        function skipIntro() {
+            const overlay = document.getElementById('intro-overlay');
+            const main = document.getElementById('main-app');
+            
+            overlay.style.transition = 'opacity 1s';
+            overlay.style.opacity = 0;
+            
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                main.style.display = 'block';
+                setTimeout(() => main.style.opacity = 1, 100);
+                initGallery();
+            }, 1000);
+        }
+
+        // --- 3. TIME TOGETHER COUNTER ---
+        function updateTimer() {
+            const start = new Date(CONFIG.startDate + "T00:00:00");
+            const now = new Date();
+
+            let years = now.getFullYear() - start.getFullYear();
+            let months = now.getMonth() - start.getMonth();
+            let days = now.getDate() - start.getDate();
+
+            if (days < 0) {
+                months--;
+                days += new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+            }
+            if (months < 0) {
+                years--;
+                months += 12;
+            }
+
+            const diff = now - start;
+            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((diff / (1000 * 60)) % 60);
+            const seconds = Math.floor((diff / 1000) % 60);
+
+            document.getElementById('years').innerText = years;
+            document.getElementById('months').innerText = months;
+            document.getElementById('days').innerText = days;
+            document.getElementById('hours').innerText = hours;
+            document.getElementById('minutes').innerText = minutes;
+            document.getElementById('seconds').innerText = seconds;
+        }
+        setInterval(updateTimer, 1000);
+
+        // --- 4. GALLERY & LIGHTBOX ---
+        function initGallery() {
+            const container = document.getElementById('gallery-container');
+            // Shuffle
+            const shuffled = CONFIG.images.sort(() => 0.5 - Math.random());
+            
+            shuffled.forEach(src => {
+                const div = document.createElement('div');
+                div.className = 'gallery-item';
+                div.onclick = () => openLightbox(src);
+                div.innerHTML = `<img src="${src}" loading="lazy">`;
+                container.appendChild(div);
+            });
+        }
+
+        function openLightbox(src) {
+            const lb = document.getElementById('lightbox');
+            const img = document.getElementById('lightbox-img');
+            img.src = src;
+            lb.style.display = 'flex';
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').style.display = 'none';
+        }
+
+        // --- 5. INTERACTIVE HEARTS ---
+        function createHeart(e) {
+            // Don't spawn if clicking button/input
+            if(e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+
+            const heart = document.createElement('div');
+            heart.classList.add('floating-heart');
+            heart.innerHTML = '❤️';
+            heart.style.left = e.clientX + 'px';
+            heart.style.top = e.clientY + 'px';
+            heart.style.fontSize = Math.random() * 20 + 15 + 'px';
+            document.body.appendChild(heart);
+
             setTimeout(() => {
                 heart.remove();
-            }, 6000);
-        }, i * 100);
-    }
-}
-
-// Anniversary counter functionality
-function startAnniversaryCounter() {
-    // Set your anniversary date here (YYYY, MM-1, DD)
-    const anniversaryDate = new Date(2025, 7, 24); // August 24, 2025
-    const loveQuotes = [
-        "Every moment with you is a blessing",
-        "I love you more with each passing day",
-        "You are my sunshine on a cloudy day",
-        "My heart is and always will be yours",
-        "Growing old with you is my greatest dream",
-        "You make my heart skip a beat",
-        "I fall in love with you every day"
-    ];
-    
-    function updateCounter() {
-        const now = new Date();
-        const diff = now - anniversaryDate;
-        
-        // Calculate time units
-        const seconds = Math.floor(diff / 1000);
-        const minutes = Math.floor(seconds / 60);
-        const hours = Math.floor(minutes / 60);
-        const days = Math.floor(hours / 24);
-        const months = Math.floor(days / 30.44); // Average month length
-        const years = Math.floor(months / 12);
-        
-        // Update the counter display
-        document.getElementById('years').textContent = years;
-        document.getElementById('months').textContent = months % 12;
-        document.getElementById('days').textContent = Math.floor(days % 30.44);
-        document.getElementById('hours').textContent = hours % 24;
-        document.getElementById('minutes').textContent = minutes % 60;
-        document.getElementById('seconds').textContent = seconds % 60;
-        
-        // Change quote every 10 seconds
-        if (seconds % 10 === 0) {
-            const randomQuote = loveQuotes[Math.floor(Math.random() * loveQuotes.length)];
-            document.getElementById('love-quote').textContent = `"${randomQuote}"`;
+            }, 1000);
         }
-    }
-    
-    // Update counter immediately and then every second
-    updateCounter();
-    setInterval(updateCounter, 1000);
-}
 
-// Memory page click events
-const memoryPages = document.querySelectorAll('.memory-page');
-memoryPages.forEach(page => {
-    page.addEventListener('click', function() {
-        homeScreen.style.display = 'none';
-        portfolioSection.style.display = 'block';
-    });
-});
-
-// Back button functionality
-backBtn.addEventListener('click', function() {
-    portfolioSection.style.display = 'none';
-    homeScreen.style.display = 'flex';
-});
-
-// Video placeholder click
-const videoPlaceholder = document.querySelector('.video-placeholder');
-videoPlaceholder.addEventListener('click', function() {
-    alert("Love story video would play here! ❤️");
-});
+        // --- 6. MUSIC CONTROL ---
+        function toggleMusic() {
+            const audio = document.getElementById('bg-music');
+            const btn = document.getElementById('music-btn');
+            if (audio.paused) {
+                audio.play();
+                btn.classList.add('playing');
+            } else {
+                audio.pause();
+                btn.classList.remove('playing');
+            }
+        }
