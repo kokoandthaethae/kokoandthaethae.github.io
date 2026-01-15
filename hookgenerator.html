@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burmese Hook Bot (TikTok & Facebook)</title>
+    
+    <!-- 1. Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- 3. Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- 4. Google Generative AI SDK (via Import Map) -->
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/generative-ai": "https://esm.run/@google/generative-ai"
+        }
+      }
+    </script>
+
+    <!-- Custom Font for Burmese -->
+    <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        .font-burmese { font-family: 'Padauk', sans-serif; }
+        .animate-fade-in-down { animation: fadeInDown 0.3s ease-out; }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import { GoogleGenerativeAI } from "@google/generative-ai";
+        
+        const { useState, useEffect } = React;
+
+        // --- Icon Components (Inline SVGs for standalone HTML) ---
+        const IconSparkles = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+        );
+        const IconSettings = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        );
+        const IconX = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 6 6 18"/><path d="m6 6 18 18"/></svg>
+        );
+        const IconAlertCircle = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+        );
+        const IconMessageSquare = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        );
+        const IconImage = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+        );
+        const IconUpload = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+        );
+        const IconCheck = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"/></svg>
+        );
+        const IconCopy = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+        );
+
+        // --- Helper Components ---
+        const Card = ({ children, className = "" }) => (
+            <div className={`bg-white rounded-xl shadow-lg border border-slate-100 overflow-hidden ${className}`}>
+                {children}
+            </div>
+        );
+
+        const Button = ({ children, onClick, variant = "primary", disabled = false, className = "", icon: Icon }) => {
+            const baseStyle = "flex items-center justify-center px-4 py-3 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed";
+            const variants = {
+                primary: "bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-200",
+                secondary: "bg-slate-100 hover:bg-slate-200 text-slate-700",
+                outline: "border-2 border-blue-600 text-blue-600 hover:bg-blue-50",
+                ghost: "text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+            };
+
+            return (
+                <button onClick={onClick} disabled={disabled} className={`${baseStyle} ${variants[variant]} ${className}`}>
+                    {Icon && <Icon className="w-5 h-5 mr-2" />}
+                    {children}
+                </button>
+            );
+        };
+
+        const Spinner = () => (
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+        );
+
+        // --- Hook Card Component ---
+        const HookCard = ({ data }) => {
+            const [copied, setCopied] = useState(false);
+
+            const handleCopy = () => {
+                navigator.clipboard.writeText(`${data.title}\n\n${data.caption}`);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            };
+
+            return (
+                <div className="bg-white rounded-xl p-5 shadow-sm border-l-4 border-blue-500 hover:shadow-md transition-shadow group">
+                    <div className="flex justify-between items-start mb-2">
+                        <span className="text-xs font-bold text-blue-600 uppercase tracking-wider bg-blue-50 px-2 py-1 rounded">
+                            {data.type}
+                        </span>
+                        <button 
+                            onClick={handleCopy}
+                            className={`p-2 rounded-lg transition-colors ${copied ? 'bg-green-100 text-green-700' : 'text-slate-400 hover:bg-slate-100 hover:text-blue-600'}`}
+                            title="Copy to clipboard"
+                        >
+                            {copied ? <IconCheck className="w-4 h-4" /> : <IconCopy className="w-4 h-4" />}
+                        </button>
+                    </div>
+                    
+                    <h3 className="text-lg font-bold text-slate-800 mb-2 leading-relaxed font-burmese">
+                        {data.title}
+                    </h3>
+                    
+                    <p className="text-slate-600 text-sm leading-relaxed border-t border-slate-100 pt-3 mt-1 font-burmese">
+                        {data.caption}
+                    </p>
+                </div>
+            );
+        };
+
+        // --- Main App Component ---
+        function App() {
+            const [apiKey, setApiKey] = useState('');
+            const [showSettings, setShowSettings] = useState(false);
+            
+            // Inputs
+            const [productName, setProductName] = useState('');
+            const [productInfo, setProductInfo] = useState('');
+            const [image, setImage] = useState(null);
+            const [imagePreview, setImagePreview] = useState(null);
+            
+            // State
+            const [loading, setLoading] = useState(false);
+            const [generatedHooks, setGeneratedHooks] = useState([]);
+            const [error, setError] = useState('');
+
+            // Persist API Key
+            useEffect(() => {
+                const storedKey = localStorage.getItem('gemini_api_key');
+                if (storedKey) setApiKey(storedKey);
+            }, []);
+
+            const handleSaveKey = (key) => {
+                setApiKey(key);
+                localStorage.setItem('gemini_api_key', key);
+                setShowSettings(false);
+            };
+
+            // Image Handling
+            const handleImageUpload = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    setImage(file);
+                    const reader = new FileReader();
+                    reader.onloadend = () => setImagePreview(reader.result);
+                    reader.readAsDataURL(file);
+                }
+            };
+
+            // Conversion for API
+            async function fileToGenerativePart(file) {
+                const base64EncodedDataPromise = new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                    reader.readAsDataURL(file);
+                });
+                return {
+                    inlineData: { data: await base64EncodedDataPromise, mimeType: file.type },
+                };
+            }
+
+            // Generation Logic
+            const generateHooks = async () => {
+                if (!apiKey) {
+                    setError("Please enter your Gemini API Key in settings first.");
+                    setShowSettings(true);
+                    return;
+                }
+                if (!productName && !productInfo) {
+                    setError("Please provide product details.");
+                    return;
+                }
+
+                setLoading(true);
+                setError('');
+                setGeneratedHooks([]);
+
+                try {
+                    const genAI = new GoogleGenerativeAI(apiKey);
+                    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+                    let prompt = `
+                        You are an expert Burmese Digital Marketing Copywriter specializing in TikTok and Facebook.
+                        
+                        Task: Create 5 viral, high-converting video/post hooks in Burmese (Myanmar Language) for the following product.
+                        
+                        Product Name: ${productName}
+                        Product Details: ${productInfo}
+                        
+                        Constraints:
+                        1. Output ONLY a valid JSON array of objects.
+                        2. Format: [{"title": "Burmese Hook Title", "type": "Hook Type (e.g. Pain Point, Curiosity)", "caption": "Short caption explanation in Burmese"}]
+                        3. Tone: Casual, engaging, exciting (Facebook/TikTok style).
+                        4. Use Burmese script (Zawgyi/Unicode compliant - prefer Unicode).
+                        5. If an image is provided, analyze it to describe visual features in the hooks.
+                    `;
+
+                    let result;
+                    if (image) {
+                        const imagePart = await fileToGenerativePart(image);
+                        result = await model.generateContent([prompt, imagePart]);
+                    } else {
+                        result = await model.generateContent(prompt);
+                    }
+
+                    const responseText = result.response.text();
+                    const cleanJson = responseText.replace(/```json|```/g, '').trim();
+                    const parsedHooks = JSON.parse(cleanJson);
+                    
+                    setGeneratedHooks(parsedHooks);
+
+                } catch (err) {
+                    console.error(err);
+                    setError("Failed to generate. Please check your API Key or try again. " + err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div className="min-h-screen font-sans pb-20">
+                    {/* Header */}
+                    <header className="bg-blue-600 text-white p-6 shadow-lg sticky top-0 z-10">
+                        <div className="max-w-4xl mx-auto flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                                    <IconSparkles className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h1 className="text-2xl font-bold tracking-tight">Burmese Hook Bot</h1>
+                                    <p className="text-blue-100 text-sm font-medium opacity-90">TikTok & Facebook Generator</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowSettings(!showSettings)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                                <IconSettings className="w-6 h-6" />
+                            </button>
+                        </div>
+                    </header>
+
+                    <main className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
+                        {/* Settings */}
+                        {showSettings && (
+                            <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 animate-fade-in-down mb-6">
+                                <div className="flex justify-between items-start mb-4">
+                                    <h3 className="font-bold text-lg text-blue-900 flex items-center gap-2">
+                                        <IconSettings className="w-5 h-5" /> Settings
+                                    </h3>
+                                    <button onClick={() => setShowSettings(false)} className="text-blue-400 hover:text-blue-700">
+                                        <IconX className="w-5 h-5" />
+                                    </button>
+                                </div>
+                                <label className="block text-sm font-semibold text-blue-800 mb-2">Google Gemini API Key</label>
+                                <div className="flex gap-2">
+                                    <input 
+                                        type="password" 
+                                        value={apiKey} 
+                                        onChange={(e) => setApiKey(e.target.value)}
+                                        placeholder="Enter your AI Studio Key (starts with AIza...)"
+                                        className="flex-1 p-3 rounded-lg border border-blue-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                                    />
+                                    <Button onClick={() => handleSaveKey(apiKey)} variant="primary">Save</Button>
+                                </div>
+                                <p className="text-xs text-blue-600 mt-2">
+                                    Key is stored locally in browser. Get one at <a href="https://aistudio.google.com/app/apikey" target="_blank" className="underline font-bold">aistudio.google.com</a>.
+                                </p>
+                            </div>
+                        )}
+
+                        {error && (
+                            <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-200 flex items-center gap-3">
+                                <IconAlertCircle className="w-5 h-5 flex-shrink-0" />
+                                <p>{error}</p>
+                            </div>
+                        )}
+
+                        <div className="grid md:grid-cols-2 gap-6">
+                            {/* Inputs */}
+                            <div className="space-y-6">
+                                <Card className="p-6">
+                                    <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                        <IconMessageSquare className="w-5 h-5 text-blue-600" /> Product Details
+                                    </h2>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-600 mb-1">Product Name</label>
+                                            <input type="text" value={productName} onChange={(e) => setProductName(e.target.value)} placeholder="e.g. Thanaka Sunscreen" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-600 mb-1">Key Features / Benefits</label>
+                                            <textarea value={productInfo} onChange={(e) => setProductInfo(e.target.value)} placeholder="Describe the product (e.g. Whitening, Anti-aging)..." className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg h-32 focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none" />
+                                        </div>
+                                    </div>
+                                </Card>
+
+                                <Card className="p-6">
+                                    <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                        <IconImage className="w-5 h-5 text-blue-600" /> Product Image
+                                    </h2>
+                                    <div className="relative group cursor-pointer">
+                                        <input type="file" accept="image/*" onChange={handleImageUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                                        {!imagePreview ? (
+                                            <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 flex flex-col items-center justify-center text-slate-400 group-hover:border-blue-500 group-hover:text-blue-500 transition-colors bg-slate-50">
+                                                <IconUpload className="w-10 h-10 mb-2" />
+                                                <p className="font-medium text-sm">Click or Drag to Upload</p>
+                                            </div>
+                                        ) : (
+                                            <div className="relative rounded-lg overflow-hidden border border-slate-200 bg-slate-900">
+                                                <img src={imagePreview} alt="Preview" className="w-full h-64 object-contain" />
+                                                <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded backdrop-blur-md cursor-pointer hover:bg-red-600 z-20" onClick={(e) => { e.preventDefault(); setImage(null); setImagePreview(null); }}>Remove</div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </Card>
+
+                                <Button onClick={generateHooks} disabled={loading} className="w-full text-lg shadow-xl shadow-blue-200/50">
+                                    {loading ? <><Spinner /> <span className="ml-2">Analyzing...</span></> : 'Generate Viral Hooks'}
+                                </Button>
+                            </div>
+
+                            {/* Results */}
+                            <div className="space-y-6">
+                                <div className="flex items-center justify-between">
+                                    <h2 className="text-xl font-bold text-slate-800">Generated Results</h2>
+                                    {generatedHooks.length > 0 && <span className="text-xs font-semibold bg-green-100 text-green-700 px-3 py-1 rounded-full">{generatedHooks.length} Hooks Ready</span>}
+                                </div>
+
+                                {generatedHooks.length === 0 && !loading && (
+                                    <div className="h-full flex flex-col items-center justify-center text-slate-400 border-2 border-dashed border-slate-200 rounded-xl min-h-[400px] p-8 text-center">
+                                        <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mb-4"><IconSparkles className="w-10 h-10 text-blue-300" /></div>
+                                        <h3 className="text-lg font-semibold text-slate-500">No Hooks Yet</h3>
+                                        <p className="text-sm mt-2 max-w-xs">Upload details to generate hooks.</p>
+                                    </div>
+                                )}
+
+                                {loading && (
+                                    <div className="space-y-4 animate-pulse">
+                                        {[1,2,3].map(i => (
+                                            <div key={i} className="h-32 bg-white rounded-xl shadow-sm border border-slate-100 p-4 space-y-3">
+                                                <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                                                <div className="h-3 bg-slate-100 rounded w-1/2"></div>
+                                                <div className="h-8 bg-slate-100 rounded w-full mt-4"></div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <div className="space-y-4">
+                                    {generatedHooks.map((hook, index) => (
+                                        <HookCard key={index} data={hook} />
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
